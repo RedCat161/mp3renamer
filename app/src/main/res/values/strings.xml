@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">MP3 Порядок</string>
+    <string name="btn_choose_folder">Выбрать папку</string>
+    <string name="btn_number">Пронумеровать</string>
+    <string name="btn_shuffle">Перемешать</string>
+    <string name="empty_hint">Папка не выбрана.\nНажмите «Выбрать папку»</string>
+</resources>

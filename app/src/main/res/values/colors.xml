@@ -1,0 +1,20 @@
+<resources>
+    <!-- Тёмная палитра -->
+    <color name="background_root">#0E0E13</color>
+    <color name="surface">#1A1A22</color>
+    <color name="row_background">#20202A</color>
+    <color name="row_stroke">#2A2A36</color>
+
+    <color name="text_primary">#F2F1F7</color>
+    <color name="text_secondary">#9997A8</color>
+    <color name="text_muted">#6E6C7C</color>
+
+    <color name="accent_primary">#8B6CFF</color>
+    <color name="accent_primary_variant">#6C4BFF</color>
+    <color name="accent_on_primary">#FFFFFF</color>
+
+    <color name="badge_background">#338B6CFF</color>
+    <color name="badge_text">#C9BBFF</color>
+
+    <color name="ic_launcher_background">#6C4BFF</color>
+</resources>
