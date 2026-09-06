@@ -15,7 +15,7 @@
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         android:gravity="center_vertical"
-        android:padding="12dp">
+        android:padding="10dp">
 
         <TextView
             android:id="@+id/tvPosition"
@@ -26,7 +26,18 @@
             android:textColor="@color/badge_text"
             android:textSize="13sp"
             android:textStyle="bold"
-            android:layout_marginEnd="12dp" />
+            android:layout_marginEnd="10dp" />
+
+        <ImageView
+            android:id="@+id/btnPlay"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:padding="8dp"
+            android:src="@drawable/ic_play"
+            android:tint="@color/accent_primary"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="@string/play_content_description"
+            android:layout_marginEnd="8dp" />
 
         <TextView
             android:id="@+id/tvFileName"

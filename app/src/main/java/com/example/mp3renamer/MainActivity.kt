@@ -1,6 +1,7 @@
 package com.example.mp3renamer
 
 import android.content.Intent
+import android.media.MediaPlayer
 import android.net.Uri
 import android.os.Bundle
 import android.view.View
@@ -25,16 +26,16 @@ class MainActivity : AppCompatActivity() {
     private var treeUri: Uri? = null
     private val items = mutableListOf<Mp3Item>()
 
+    private var mediaPlayer: MediaPlayer? = null
+
     // Убирает СТАРУЮ нумерацию перед названием. Признак нумерации — это цифры
     // в начале имени, сразу за которыми (может быть через пробелы) идёт ЗНАК
     // ПУНКТУАЦИИ (точка, подчёркивание, дефис и т.п.), а ПОСЛЕ этого знака —
     // НЕ цифра (иначе это просто десятичное число вроде "3.14", а не номер).
-    // Примеры, которые СРЕЗАЮТСЯ: "01.Song.mp3", "02_Song.mp3", "001 - Song.mp3".
-    // Примеры, которые НЕ трогаются:
-    //   "50 Cent - ...", "1990 Song.mp3"   (после цифр пробел и буква)
-    //   "3.14 Pi Song.mp3"                  (после точки снова цифра — не номер)
-    // \p{L} — любая буква любого языка, \p{N} — любая цифра.
     private val numberPrefixRegex = Regex("""^\d+\s*[^\p{L}\p{N}\s]\s*(?!\d)""")
+
+    // Достаёт число из начала имени файла (для кнопки "Сортировать по номеру").
+    private val leadingDigitsRegex = Regex("""^(\d+)""")
 
     private val prefs by lazy { getSharedPreferences("mp3renamer_prefs", MODE_PRIVATE) }
 
@@ -54,7 +55,7 @@ class MainActivity : AppCompatActivity() {
         emptyHint = findViewById(R.id.tvEmptyHint)
 
         recyclerView.layoutManager = LinearLayoutManager(this)
-        adapter = Mp3Adapter(items)
+        adapter = Mp3Adapter(items) { position -> togglePlay(position) }
         recyclerView.adapter = adapter
 
         val touchHelper = ItemTouchHelper(
@@ -74,12 +75,26 @@ class MainActivity : AppCompatActivity() {
             shuffleFiles()
         }
 
+        findViewById<MaterialButton>(R.id.btnSortAsc).setOnClickListener {
+            sortAscendingByNumber()
+        }
+
         restoreLastFolderIfPossible()
     }
 
     override fun onPause() {
         super.onPause()
         saveCurrentOrder()
+    }
+
+    override fun onStop() {
+        super.onStop()
+        stopPlayback()
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        stopPlayback()
     }
 
     private fun restoreLastFolderIfPossible() {
@@ -105,6 +120,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun loadMp3Files(uri: Uri) {
+        stopPlayback()
         val dir = DocumentFile.fromTreeUri(this, uri)
         items.clear()
 
@@ -147,9 +163,30 @@ class MainActivity : AppCompatActivity() {
 
     private fun shuffleFiles() {
         if (items.size < 2) return
+        stopPlayback()
         Collections.shuffle(items)
         adapter.notifyDataSetChanged()
         saveCurrentOrder()
+    }
+
+    /**
+     * Сортирует список по числу в начале имени файла (по возрастанию).
+     * Файлы без номера в начале имени уходят в конец списка (по алфавиту).
+     * Позволяет вернуть порядок, соответствующий уже проставленной нумерации,
+     * после того как строки были перетащены вручную.
+     */
+    private fun sortAscendingByNumber() {
+        if (items.size < 2) return
+        stopPlayback()
+        items.sortWith(
+            compareBy(
+                { leadingDigitsRegex.find(it.documentFile.name ?: "")?.groupValues?.get(1)?.toIntOrNull() ?: Int.MAX_VALUE },
+                { it.documentFile.name?.lowercase() }
+            )
+        )
+        adapter.notifyDataSetChanged()
+        saveCurrentOrder()
+        Toast.makeText(this, "Отсортировано по номеру", Toast.LENGTH_SHORT).show()
     }
 
     private fun stripExistingNumber(name: String): String {
@@ -166,9 +203,16 @@ class MainActivity : AppCompatActivity() {
     }
 
     /**
-     * Нумерует файлы в текущем порядке списка (001, 002, ...),
-     * убирая старую нумерацию (если она в формате "3 цифры + разделитель"),
-     * и сохраняя остальную часть названия.
+     * Нумерует файлы в текущем порядке списка (001, 002, ...), убирая старую
+     * нумерацию (если она была), и сохраняя остальную часть названия.
+     *
+     * ВАЖНО: порядок элементов в списке `items` при этом НЕ меняется — мы просто
+     * переименовываем файл на его текущей позиции. Поэтому после переименования
+     * достаточно обновить экран текущим списком (adapter.notifyDataSetChanged()),
+     * а НЕ перечитывать папку заново с диска: повторное чтение через SAF сразу
+     * после массового переименования иногда возвращает неактуальный порядок
+     * (кэширование на стороне провайдера), из-за чего песни как будто сами
+     * "прыгали" по местам, хотя вы не трогали кнопку "Перемешать".
      *
      * Переименование делается в 2 прохода:
      * 1) все файлы получают временные уникальные имена — чтобы избежать
@@ -185,6 +229,8 @@ class MainActivity : AppCompatActivity() {
             return
         }
 
+        stopPlayback()
+
         val originalNames = items.map { it.documentFile.name ?: "unknown.mp3" }
         var errorCount = 0
 
@@ -198,7 +244,7 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        // Проход 2: финальные имена с нумерацией
+        // Проход 2: финальные имена с нумерацией (порядок списка не меняется!)
         items.forEachIndexed { index, item ->
             val cleanedName = stripExistingNumber(originalNames[index])
             val number = String.format("%03d", index + 1)
@@ -210,7 +256,9 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        treeUri?.let { loadMp3Files(it) }
+        // Просто перерисовываем текущий (уже правильно упорядоченный) список —
+        // без повторного чтения папки с диска.
+        adapter.notifyDataSetChanged()
         saveCurrentOrder()
 
         if (errorCount == 0) {
@@ -221,6 +269,49 @@ class MainActivity : AppCompatActivity() {
                 "Готово, но с ошибками: $errorCount файл(ов) не удалось переименовать",
                 Toast.LENGTH_LONG
             ).show()
+        }
+    }
+
+    /** Проигрывает/ставит на паузу файл по позиции в списке (превью прямо в приложении). */
+    private fun togglePlay(position: Int) {
+        if (position < 0 || position >= items.size) return
+
+        if (adapter.playingPosition == position) {
+            stopPlayback()
+            return
+        }
+
+        stopPlayback()
+
+        val uri = items[position].documentFile.uri
+        try {
+            mediaPlayer = MediaPlayer().apply {
+                setDataSource(this@MainActivity, uri)
+                setOnPreparedListener { start() }
+                setOnCompletionListener { stopPlayback() }
+                setOnErrorListener { _, _, _ -> stopPlayback(); true }
+                prepareAsync()
+            }
+            adapter.setPlayingPosition(position)
+        } catch (e: Exception) {
+            Toast.makeText(this, "Не удалось воспроизвести файл", Toast.LENGTH_SHORT).show()
+            mediaPlayer = null
+            adapter.setPlayingPosition(-1)
+        }
+    }
+
+    private fun stopPlayback() {
+        mediaPlayer?.let {
+            try {
+                if (it.isPlaying) it.stop()
+            } catch (e: Exception) {
+                // игнорируем — плеер мог быть в промежуточном состоянии
+            }
+            it.release()
+        }
+        mediaPlayer = null
+        if (adapter.playingPosition != -1) {
+            adapter.setPlayingPosition(-1)
         }
     }
 

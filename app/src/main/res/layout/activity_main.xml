@@ -34,7 +34,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        android:layout_marginBottom="16dp">
+        android:layout_marginBottom="8dp">
 
         <com.google.android.material.button.MaterialButton
             style="@style/Widget.MaterialComponents.Button.OutlinedButton"
@@ -68,6 +68,20 @@
             app:iconGravity="textStart"
             app:cornerRadius="16dp" />
     </LinearLayout>
+
+    <com.google.android.material.button.MaterialButton
+        style="@style/Widget.MaterialComponents.Button.TextButton"
+        android:id="@+id/btnSortAsc"
+        android:layout_width="match_parent"
+        android:layout_height="44dp"
+        android:layout_marginBottom="16dp"
+        android:text="@string/btn_sort_asc"
+        android:textAllCaps="false"
+        android:textColor="@color/accent_primary"
+        app:icon="@drawable/ic_sort_ascending"
+        app:iconTint="@color/accent_primary"
+        app:iconGravity="textStart"
+        app:cornerRadius="16dp" />
 
     <TextView
         android:id="@+id/tvEmptyHint"
