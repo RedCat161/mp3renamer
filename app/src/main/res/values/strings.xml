@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">MP3 Порядок</string>
+    <string name="app_name">Mp3 Renamer</string>
     <string name="btn_choose_folder">Выбрать папку</string>
     <string name="btn_number">Пронумеровать</string>
     <string name="btn_shuffle">Перемешать</string>

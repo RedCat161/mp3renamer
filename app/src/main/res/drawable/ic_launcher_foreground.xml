@@ -3,7 +3,22 @@
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
+    <!-- внешнее свечение -->
     <path
-        android:fillColor="#FFFFFF"
-        android:pathData="M44,30 L44,66 A10,10 0 1,1 40,58.3 L40,38 L70,32 L70,58 A10,10 0 1,1 66,50.3 L66,26 Z" />
+        android:fillColor="#1A3882F6"
+        android:pathData="M22,54 A32,32 0 1,0 86,54 A32,32 0 1,0 22,54 Z" />
+    <!-- среднее свечение -->
+    <path
+        android:fillColor="#403882F6"
+        android:pathData="M30,54 A24,24 0 1,0 78,54 A24,24 0 1,0 30,54 Z" />
+    <!-- яркое ядро -->
+    <path
+        android:fillColor="#3882F6"
+        android:pathData="M38,54 A16,16 0 1,0 70,54 A16,16 0 1,0 38,54 Z" />
+    <!-- две восьмые ноты, соединённые ребром -->
+    <path android:fillColor="#FFFFFF" android:pathData="M41,66 A5,5 0 1,0 51,66 A5,5 0 1,0 41,66 Z" />
+    <path android:fillColor="#FFFFFF" android:pathData="M49,40 L51,40 L51,66 L49,66 Z" />
+    <path android:fillColor="#FFFFFF" android:pathData="M58,63 A5,5 0 1,0 68,63 A5,5 0 1,0 58,63 Z" />
+    <path android:fillColor="#FFFFFF" android:pathData="M61,37 L63,37 L63,63 L61,63 Z" />
+    <path android:fillColor="#FFFFFF" android:pathData="M49,40 L63,37 L63,44 L49,47 Z" />
 </vector>

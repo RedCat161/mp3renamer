@@ -10,7 +10,8 @@ import java.util.Collections
 
 class Mp3Adapter(
     private val items: MutableList<Mp3Item>,
-    private val onPlayClick: (position: Int) -> Unit
+    private val onPlayClick: (position: Int) -> Unit,
+    private val durationProvider: (fileName: String) -> Long?
 ) : RecyclerView.Adapter<Mp3Adapter.ViewHolder>() {
 
     /** Позиция сейчас проигрываемого файла, -1 если ничего не играет. */
@@ -21,6 +22,7 @@ class Mp3Adapter(
         val textView: TextView = view.findViewById(R.id.tvFileName)
         val positionBadge: TextView = view.findViewById(R.id.tvPosition)
         val btnPlay: ImageView = view.findViewById(R.id.btnPlay)
+        val tvDuration: TextView = view.findViewById(R.id.tvDuration)
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
@@ -36,13 +38,16 @@ class Mp3Adapter(
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         val item = items[position]
-        holder.textView.text = item.documentFile.name ?: "—"
+        val name = item.documentFile.name
+        holder.textView.text = name ?: "—"
         // Бейдж показывает ТЕКУЩУЮ позицию в списке (визуально, в файл не пишется,
         // пока не нажата кнопка "Пронумеровать").
         holder.positionBadge.text = String.format("%02d", position + 1)
         holder.btnPlay.setImageResource(
             if (position == playingPosition) R.drawable.ic_pause else R.drawable.ic_play
         )
+        val duration = name?.let { durationProvider(it) }
+        holder.tvDuration.text = if (duration != null && duration > 0) formatDuration(duration) else ""
     }
 
     override fun getItemCount(): Int = items.size
@@ -66,7 +71,7 @@ class Mp3Adapter(
         return true
     }
 
-    /** Обновляет, какая строка сейчас проигрывается (или -1, если ничего). */
+    /** Обновляет, какая строка сейчас АКТИВНО проигрывается (не на паузе), или -1. */
     fun setPlayingPosition(position: Int) {
         val old = playingPosition
         playingPosition = position

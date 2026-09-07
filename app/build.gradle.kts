@@ -38,4 +38,6 @@ dependencies {
     implementation("androidx.recyclerview:recyclerview:1.3.2")
     implementation("androidx.documentfile:documentfile:1.0.1")
     implementation("androidx.activity:activity-ktx:1.9.0")
+    implementation("androidx.media:media:1.7.0")
+    implementation("androidx.cardview:cardview:1.0.0")
 }
